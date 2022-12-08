@@ -1,0 +1,352 @@
+Première approche du MVC
+Séparation de l'affichage
+
+La première chose à faire va être de séparer l'affichage du reste de notre code:
+
+<?php
+// index.php
+// accès aux données
+$bdd = new PDO("mysql:host=database:3306;dbname=boggy;charset=utf8",'VOTRE USER','VOTRE MDP');
+$billets  = $bdd->query('SELECT BIL_ID as id, BIL_DATE as date, BIL_TITRE as titre, BIL_CONTENU as contenu FROM T_BILLET order by BIL_ID desc');
+
+// affichage
+require 'vueAccueil.php';
+
+et
+
+<!--vueAccueil.php-->
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style.css">
+    <title>Mon blog</title>
+</head>
+<body>
+<div id="global">
+    <header>
+        <a href="index.php"><h1 id="titreBlog">Mon Blog</h1></a>
+        <p>Hello et bienvenue !!!!</p>
+    </header>
+    <div id="contenu">
+        <?php foreach($billets as $billet): ?>
+        <article>
+            <header>
+                <h1 class="titreBillet">
+                    <?= $billet['titre']?>
+                </h1>
+                <time><?= $billet['date']?></time>
+            </header>
+            <p><?= $billet['contenu']?></p>
+        </article>
+        <hr>
+
+        <?php endforeach; ?>
+    </div>
+    <footer id="piedBlog">
+        Blog exercice
+    </footer>
+</div>
+</body>
+</html>
+
+Séparation de l'accès aux données
+
+Isolons de la même manière l'accès aux données en créant un fichier Model.php
+
+<?php
+function getBillets(){
+    $bdd = new PDO("mysql:host=database:3306;dbname=boggy;charset=utf8",'VOTRE USER','VOTRE MDP');
+    $billets  = $bdd->query('SELECT BIL_ID as id, BIL_DATE as date, BIL_TITRE as titre, BIL_CONTENU as contenu FROM T_BILLET order by BIL_ID desc');
+    return $billets;
+}
+
+De ce fait, index.php devient:
+
+<?php
+require 'Model.php';
+
+// accès aux données
+$billets = getBillets();
+
+// affichage
+require 'vueAccueil.php';
+
+Nous avons maintenant 3 fichier pour notre page:
+
+    Model.php pour l'accès aux données.
+    vueAccueil.php pour l'affichage.
+    index.php qui fait le lien entre les deux autres.
+
+Nous pouvons alors commencer à parler de MVC.
+Le MVC
+
+M pour model V pour vue et C pour controleur. Le principe est le suivant:
+
+mvc
+
+Le modèle MVC offre une séparation claire des responsabilités au sein d'une application, en conformité avec les principes de conception déjà étudiés : responsabilité unique, couplage faible et cohésion forte. Le prix à payer est une augmentation de la complexité de l'architecture.
+
+Dans le cas d'une application Web, l'application du modèle MVC permet aux pages HTML (qui constituent la partie Vue) de contenir le moins possible de code serveur, étant donné que le scripting est regroupé dans les deux autres parties de l'application.
+Quelques améliorations supplémentaires
+
+Un site web se réduit rarement à une seule page. Nous allons donc mettre en place l'utilisation d'un modèle de page (template). Ce modèle contiendra les éléments communs de nos vues.
+
+<!--gabarit.php -->
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style.css">
+    <title>Mon blog</title>
+</head>
+<body>
+<div id="global">
+    <header>
+        <a href="index.php">
+            <h1 id="titreBlog">Mon BLog</h1>
+        </a>
+        <p>Hello et bienvenue !!!!</p>
+    </header>
+    <div id="contenu">
+        <?= $contenu; ?>
+    </div>
+    <footer id="piedBlog">
+        Blog exercice
+    </footer>
+</div>
+</body>
+</html>
+
+Au moment de l'affichage d'une vue HTML, il suffit de définir les valeurs des éléments spécifiques, puis de déclencher le rendu de notre gabarit. Pour cela, on utilise des fonctions PHP qui manipulent le flux de sortie de la page. Voici notre page vueAccueil.php réécrite :
+
+<?php $titre = 'Mon Blog'; ?>
+
+<?php ob_start(); ?>
+<?php foreach ($billets as $billet): ?>
+    <article>
+        <header>
+            <h1 class="titreBillet"><?= $billet['titre'] ?></h1>
+            <time><?= $billet['date'] ?></time>
+        </header>
+        <p><?= $billet['contenu'] ?></p>
+    </article>
+    <hr />
+<?php endforeach; ?>
+<?php $contenu = ob_get_clean(); ?>
+
+<?php require 'gabarit.php'; ?>
+
+    La méthode ob_start est une méthode de mise en tampon. Ce tampon est récupéré dans $contenu après la fin de la boucle grâce à ob_get_clean(). LE rendu est alors déclenché avec l'appel du gabarit qui reprend les valeurs de $titre et de $contenu
+
+On va aussi factoriser la connection à la base de donnée. Pour le moment, un seul appel est fait à la base. Si nous faisons évoluer l'application, il y aura d'autres appelles, c'est pourquoi il faut factoriser la phase de connection.
+
+<!--Model.php-->
+<?php
+
+function getBillets()
+{
+    $bdd = getBdd();
+    $billets = $bdd->query('SELECT BIL_ID as id, BIL_DATE as date, BIL_TITRE as titre, BIL_CONTENU as contenu FROM T_BILLET order by BIL_ID desc');
+    return $billets;
+}
+
+function getBdd()
+{
+    $bdd = new PDO("mysql:host=database:3306;dbname=boggy;charset=utf8",'VOTRE USER','VOTRE MDP',array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+
+    return $bdd;
+}
+
+Gestion des erreurs
+
+C'est le contrôleur qui va s'occuper de cette problématique.
+
+J'avais déjà modifié le PDO pour qu'il renvoie des exceptions avec le paramètre supplémentaire: array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION). Nous pouvons donc récupérer cette exception dans index.php
+
+<?php
+
+require 'Modele.php';
+
+try {
+  $billets = getBillets();
+  require 'vueAccueil.php';
+}
+catch (Exception $e) {
+  echo '<html><body>Erreur ! ' . $e->getMessage() . '</body></html>';
+}
+
+Le premier require inclut uniquement la définition d'une fonction et est placé en dehors du bloc try. Le reste du code est placé à l'intérieur de ce bloc. Si une exception est levée lors de son exécution, une page HTML minimale contenant le message d'erreur est affichée.
+
+On peut souhaiter conserver l'affichage du gabarit des vues même en cas d'erreur. Il suffit de définir une vue vueErreur.php dédiée à leur affichage.
+
+<?php $titre = 'Mon Blog'; ?>
+
+<?php ob_start() ?>
+<p>Une erreur est survenue : <?= $msgErreur ?></p>
+<?php $contenu = ob_get_clean(); ?>
+
+<?php require 'gabarit.php'; ?>
+
+On modifie ensuite le contrôleur pour déclencher le rendu de cette vue en cas d'erreur.
+
+<?php
+
+require 'Modele.php';
+
+try {
+  $billets = getBillets();
+  require 'vueAccueil.php';
+}
+catch (Exception $e) {
+  $msgErreur = $e->getMessage();
+  require 'vueErreur.php';
+}
+
+Bilan intermédiaire
+
+Où en sommes nous?
+
+Nous avons accompli sur notre page d'exemple un important travail de refactoring qui a modifié son architecture en profondeur. Notre page respecte à présent un modèle MVC simple.
+
+Vous devriez avoir ces fichiers:
+
+.
+├── Model.php
+├── gabarit.php
+├── index.php
+├── style.css
+├── vueAccueil.php
+└── vueErreur.php
+
+L'ajout de nouvelles fonctionnalités se fait à présent en trois étapes :
+
+    écriture des fonctions d'accès aux données dans le modèle ;
+    création d'une nouvelle vue utilisant le gabarit pour afficher les données.
+    ajout d'une page contrôleur pour lier le modèle et la vue.
+
+Affichage d'un Billet avec l’architecture mise en place
+
+Suivons les règles précédentes:
+
+    Ajoutons une fonction dans Model.php pour accéder aux données dont nous avons besoin.
+
+// ...
+
+// récupère un billet avec son id
+function getBillet($idBillet){
+    $bdd= getBdd();
+    $billet=$bdd->prepare('SELECT BIL_ID as id, BIL_DATE as date, BIL_TITRE as titre, BIL_CONTENU as contenu FROM T_BILLET WHERE BIL_ID =?;');
+    $billet->execute(array($idBillet));
+
+    if($billet->rowCount() == 1){
+        return $billet->fetch();
+    }
+    else{
+        throw new Exception("Aucun billet ne correspond à cet identifiant");
+    }
+}
+// récupère les commentaires associés à un billet
+
+//Attention ! : si vous n'êtes pas sous PHP 8.0, ne pas écrire "function getComments($idBillet): bool|PDOStatement"
+//mais simplement "function getComments($idBillet)"
+
+function getComments($idBillet): bool|PDOStatement
+{
+    $bdd = getBdd();
+    $comments = $bdd->prepare('SELECT COM_ID as id, COM_DATE as date, COM_AUTEUR as auteur, COM_CONTENU as contenu FROM T_COMMENTAIRE WHERE BIL_ID =?');
+    $comments->execute(array($idBillet));
+    return $comments;
+}
+
+    Créons ensuite la vue vueBillet.php dédiée aux informations du billet
+
+<?php $titre = "Mon Blog - ".$billet['titre']; ?>
+
+<?php ob_start(); ?>
+<article>
+    <header>
+        <h1 class="titreBillet"><?= $billet['titre'] ?> </h1>
+        <time><?= $billet['date'] ?></time>
+    </header>
+    <p><?= $billet['contenu'] ?></p>
+</article>
+    <hr />
+    <header>
+        <h1 id="titreReponses">Réponses à <?= $billet['titre'] ?></h1>
+    </header>
+<?php foreach ($commentaires as $commentaire): ?>
+    <p><?= $commentaire['auteur'] ?> dit :</p>
+    <p><?= $commentaire['contenu'] ?></p>
+<?php endforeach; ?>
+<?php $contenu = ob_get_clean(); ?>
+
+<?php require 'gabarit.php'; ?>
+
+    cette vue ne définit que ses éléments particuliers, le reste est géré par le gabarit (dernière ligne).
+
+    enfin il nous faut un contrôleur billet.php qui fera le lien entre le model et la vue
+
+<?php
+
+require 'Modele.php';
+
+try {
+  if (isset($_GET['id'])) {
+    // intval renvoie la valeur numérique du paramètre ou 0 en cas d'échec
+    $id = intval($_GET['id']);
+    if ($id != 0) {
+      $billet = getBillet($id);
+      $commentaires = getCommentaires($id);
+      require 'vueBillet.php';
+    }
+    else
+      throw new Exception("Identifiant de billet incorrect");
+  }
+  else
+    throw new Exception("Aucun identifiant de billet");
+}
+catch (Exception $e) {
+  $msgErreur = $e->getMessage();
+  require 'vueErreur.php';
+}
+
+Afin d'atteindre cette nouvelle fonctionnalité, nous devons modifier vueAccueil.php en ajoutant un lien qui nous mène au contrôleur
+
+<!-- ... -->
+    <header>
+      <a href="<?= "billet.php?id=" . $billet['id'] ?>">
+        <h1 class="titreBillet"><?= $billet['titre'] ?></h1>
+      </a>
+      <time><?= $billet['date'] ?></time>
+    </header>
+<!-- ... -->
+
+    Ajoutez également une classe au css
+
+#titreReponses {
+    font-size : 100%;
+}
+
+Si tout s'est bien passé, vous devriez avoir ce résultat pour un billet
+
+blog2
+
+
+
+
+
+Première approche du MVC
+Séparation de l'affichage
+Séparation de l'accès aux données
+    Le MVC
+Quelques améliorations supplémentaires
+Gestion des erreurs
+Bilan intermédiaire
+Affichage d'un Billet avec l’architecture mise en place
