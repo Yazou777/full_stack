@@ -51,3 +51,7 @@ a:link {
 #titreReponses {
     font-size : 100%;
 }
+
+#txtCommentaire {
+    width: 50%;
+}

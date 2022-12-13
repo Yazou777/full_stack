@@ -1,0 +1,384 @@
+Un peu d'objet avant d'aller plus loin
+
+La Programmation Orientée Objet (POO) est essentiel aujourd’hui en développement et se retrouve dans la majorité des langages. Php ne fait pas exception et nous allons voir comment en profiter.
+Les objets
+
+Un objet peut être comparé à une boite où nous pourrons stocker des variables (propriétés) et des fonctions (méthodes).
+
+Vous avez surement déjà utilisé des objets sans vous en rendre compte. Le DateTime est un type objet. Vous pouvez stocker une date et utiliser les fonctions associées à cette date.
+
+<?php
+$ce_jour = new DateTime();
+echo 'Nous sommes le ';
+echo $ce_jour->format('d-m-Y');
+
+Mais nous pouvons également créer nos propre types. Pour créer un type d'objet il faut créer une classe. Cette classe est comme un moule d'où on va extraire les objets que l'on appelle instance de la classe.
+
+Définissons par exemple un type Produit qui aura un nom, une quantité, un prix et un booléen rupture pour savoir s'il est en stock ou non. Ces valeurs sont appelées propriétés ou membres.
+
+<?php
+class Produit
+{
+public $nom;
+public $quantite ;
+public $prix;
+public $rupture ;
+
+function afficheProduit(){
+    return "Affichage du produit";
+}
+
+function ajouterProduit(){
+    return "Ajouter du produit";
+}
+
+function supprimerProduit(){
+    return "Supprimer du produit";
+}
+}
+>
+
+Utilisons cette classe dans un fichier php:
+
+<?php
+// ICI déclarez la classe
+
+$mobile = new Produit; //Instanciation
+
+$mobile->nom = "iphone";
+$mobile->quantite = "10";
+$mobile->prix = 900;
+$mobile->rupture = false;
+
+echo $mobile->afficheProduit();
+>
+
+Le $this
+
+Il est souvent util d'accéder aux propriétés d'une instance de la classe. Malheureusement, nous ne pouvons pas connaitre d'avance le nom de cette instance, c'est pourquoi nous avons $this à notre disposition:
+
+<?php
+
+class Produit
+{
+private $nom;
+public $quantite ;
+public $prix;
+public $rupture ;
+
+function afficheProduit(){
+    return 
+    "Nom: ".$this->nom."<br/>".
+    "Quantité: ".$this->quantite."<br/>".
+    "Prix: ".$this->prix."<br/>".
+    (($this->rupture)?"Rupture de stock":"En stock");
+}
+
+function ajouterProduit(){
+    $this->quantite++;
+    if ($this->quantite > 0) $this->rupture = false;
+}
+
+function supprimerProduit(){
+    $this->quantite--;
+    if ($this->quantite <= 0) {
+        $this->rupture = true;
+        $this->quantite = 0;
+    }
+}
+
+L'encapsulation
+
+En programmation objet on ne doit pas laisser accéder directement au propriétés. Elle ne doivent être accessibles que de l'intérieur de l'instance de l'objet.
+
+Nous pouvons déclarer les propriétés comme privés pour en interdire l'accès.
+
+Notre classe devient
+
+<?php
+
+class Produit
+{
+private $nom;
+private $quantite ;
+private $prix;
+private $rupture ;
+
+public function ajouterProduit(){
+    $this->quantite++;
+    if ($this->quantite > 0) $this->rupture = false;
+}
+
+public function __toString()
+{
+    return
+    "Nom: ".$this->nom."<br/>".
+    "Quantité: ".$this->quantite."<br/>".
+    "Prix: ".$this->prix."<br/>".
+    (($this->rupture)?"Rupture de stock":"En stock");
+}
+
+public function supprimerProduit(int $nb = 1){
+    $this->quantite -= $nb;
+    if ($this->quantite <= 0) {
+        $this->rupture = true;
+        $this->quantite = 0;
+    }
+}
+
+}
+
+Cependant, si nous devons modifier une propriété il va falloir ouvrir un accès. Ceci se fait à l'aide des assesseurs (getter et setter).
+
+Par exemple pour la propriété nom, les assesseurs seront:
+
+/**
+ * Get the value of nom
+ */ 
+public function getNom()
+{
+return $this->nom;
+}
+
+/**
+ * Set the value of nom
+ *
+ * @return  self
+ */ 
+public function setNom($nom)
+{
+$this->nom = $nom;
+
+return $this;
+}
+
+    Nous ne sommes pas obligés de créer tous les assesseurs, seulement ceux dont nous avons besoin.
+
+Ajoutez les assesseurs manquant à notre classe et pensez bien à corriger dans index.php les accès aux propriétés.
+
+$mobile = new Produit; //Instanciation
+
+$mobile->setNom("iphone");
+$mobile->setQuantite(10);
+$mobile->setPrix(900);
+$mobile->setRupture(false);
+
+echo $mobile->afficheProduit();
+
+Les méthodes magiques
+
+Il existe des fonctions ou méthodes en php que l'on appelle "magiques" car elle peuvent s’executer lors de certains évènements. (cf manuel PHP)
+La méthode __toString()
+
+La méthode __toString() transforme notre objet en chaine de caractère directement. Modifions notre classe pour en profiter.
+
+class Produit
+{
+private $nom;
+private $quantite ;
+private $prix;
+private $rupture ;
+
+public function __toString()
+{
+    return
+    "Nom: ".$this->nom."<br/>".
+    "Quantité: ".$this->quantite."<br/>".
+    "Prix: ".$this->prix."<br/>".
+    (($this->rupture)?"Rupture de stock":"En stock");
+}
+
+public function ajouterProduit(){
+    $this->quantite++;
+    if ($this->quantite > 0) $this->rupture = false;
+}
+
+public function supprimerProduit(int $nb = 1){
+    $this->quantite -= $nb;
+    if ($this->quantite <= 0) {
+        $this->rupture = true;
+        $this->quantite = 0;
+    }
+}
+
+// les Assesseurs ...
+}
+
+Cette fois si on l'utilise dans un fichier cela donne:
+
+$mobile = new Produit; //Instanciation
+
+$mobile->setNom("iphone");
+$mobile->setQuantite(10);
+$mobile->setPrix(900);
+$mobile->setRupture(false);
+
+echo $mobile;
+
+$mobile->supprimerProduit(10);
+
+echo "<br/><hr>";
+
+echo $mobile;
+
+La méthodes __construct
+
+Quand nous créons l'instance de l'objet il serait plus sympa de pouvoir alimenter directement les propriétés. Le constructeur est là pour ça. Il s'agit de la méthode __construct.
+
+ public function __construct($nom, $prix, $quantite=0)
+    {
+        $this->nom = $nom;
+        $this->quantite = $quantite;
+        $this->prix = $prix;
+        $this->rupture = $quantite>=0;
+    }
+
+et le même exemple que tout à l'heure devient
+
+$mobile = new Produit("iphone",900,10); //Instanciation
+
+$imprimante = new Produit("hp",300);
+
+echo $mobile;
+echo "<br/><hr>";
+echo $imprimante;
+
+$mobile->supprimerProduit(10);
+
+echo "<br/><hr>";
+
+echo $mobile;
+
+Vous pouvez remarquer que j'ai donné la possibilité d’instancier également sans remplir la quantité grâce aux paramètres optionnels.
+L'héritage
+
+Nous pouvons également trouver des similarités d'une classe à une autre. L'idée de l'héritage est de réutiliser le code ou les fonctionnalités communes en regroupant les classe par familles.
+
+Prenons l'exemple du compte bancaire et du compte épargne.
+
+// ConpteBancaire.php
+<?php
+
+class CompteBancaire
+{
+    private $devise;
+    private $solde;
+    private $titulaire;
+
+    public function __construct($devise, $solde, $titulaire)
+    {
+        $this->devise = $devise;
+        $this->solde = $solde;
+        $this->titulaire = $titulaire;
+    }
+
+    public function getDevise()
+    {
+        return $this->devise;
+    }
+
+    public function getSolde()
+    {
+        return $this->solde;
+    }
+
+    protected function setSolde($solde)
+    {
+        $this->solde = $solde;
+    }
+
+    public function getTitulaire()
+    {
+        return $this->titulaire;
+    }
+
+    public function crediter($montant) {
+        $this->solde += $montant;
+    }
+
+    public function __toString()
+    {
+        return "Le solde du compte de $this->titulaire est de " .
+            $this->solde . " " . $this->devise;
+    }
+}
+
+// CompteEpargne.php
+<?php
+
+require_once 'CompteBancaire.php';
+
+class CompteEpargne extends CompteBancaire
+{
+    private $tauxInteret;
+
+    public function __construct($devise, $solde, $titulaire, $tauxInteret)
+    {
+        parent::__construct($devise, $solde, $titulaire);
+        $this->tauxInteret = $tauxInteret;
+    }
+
+    public function getTauxInteret()
+    {
+        return $this->tauxInteret;
+    }
+
+    public function calculerInterets($ajouterAuSolde = false)
+    {
+        $interets = $this->getSolde() * $this->tauxInteret;
+        if ($ajouterAuSolde == true)
+            $this->setSolde($this->getSolde() + $interets);
+        return $interets;
+    }
+
+    public function __toString()
+    {
+        return parent::__toString() . 
+            '. Son taux d\'interet est de ' . $this->tauxInteret * 100 . '%.';
+    }
+}
+
+L'uml correspondant:
+
+heritage
+
+Et un exemple d'utilisation de ces deux classes:
+
+// poo.php
+<?php
+
+require 'CompteBancaire.php';
+require 'CompteEpargne.php';
+
+$compteJean = new CompteBancaire("euros", 150, "Jean");
+echo $compteJean . '<br />';
+$compteJean->crediter(100);
+echo $compteJean . '<br />';
+
+$comptePaul = new CompteEpargne("dollars", 200, "Paul", 0.05);
+echo $comptePaul . '<br />';
+echo 'Interets pour ce compte : ' . $comptePaul->calculerInterets() . 
+    ' ' . $comptePaul->getDevise() . '<br />';
+$comptePaul->calculerInterets(true);
+echo $comptePaul . '<br />';
+
+En executant ces fichiers vous obtenez:
+
+Le solde du compte de Jean est de 150 euros
+Le solde du compte de Jean est de 250 euros
+Le solde du compte de Paul est de 200 dollars. Son taux d'interet est de 5%.
+Interets pour ce compte : 10 dollars
+Le solde du compte de Paul est de 210 dollars. Son taux d'interet est de 5%.
+
+
+
+
+
+Un peu d'objet avant d'aller plus loin
+Les objets
+Le $this
+L'encapsulation
+Les méthodes magiques
+    La méthode __toString()
+    La méthodes __construct
+L'héritage

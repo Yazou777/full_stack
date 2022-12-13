@@ -1,41 +1,6 @@
 <?php
-////////////////////devenue inutile/////////////////////
-// require 'Model.php';
 
-// try {
-//   $billets = getBillets();
-//   require 'vueAccueil.php';
-// }
-// catch (Exception $e) {
-//   $msgErreur = $e->getMessage();
-//   require 'vueErreur.php';
-// }
-////////////////////////////////////////////////////////
+require_once 'controller/Routeur.php';
 
-
-
-
-
-require 'controller/Controleur.php';
-
-
-try {
-    if(isset($_GET['action'])) {
-        if($_GET['action'] == 'billet'){
-            if(isset($_GET['id'])){
-                $idBillet = intval($_GET['id']);
-                if ($idBillet != 0)
-                    billet($idBillet);
-                else
-                    throw new Exception("id billet non valide");
-            }else
-                throw new Exception("id billet non défini");
-        }else
-            throw new Exception("action non valide");
-    }else {
-        accueil();
-    }
-
-}catch(Exception $e) {
-    erreur($e->getMessage());
-}
+$routeur = new Routeur();
+$routeur->routerRequete();

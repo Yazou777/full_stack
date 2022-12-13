@@ -1,47 +1,57 @@
- <!--Model.php-->
+
 <?php
-
-function getBillets()
-{
-    $bdd = getBdd();
-    $billets = $bdd->query('SELECT BIL_ID as id, BIL_DATE as date, BIL_TITRE as titre, BIL_CONTENU as contenu FROM T_BILLET order by BIL_ID desc');
-    return $billets;
-}
-
-function getBdd()
-{
-    $bdd = new PDO("mysql:host=localhost;dbname=ticket;charset=utf8",'admin','l73zeld1!',array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
-
-    return $bdd;
-}
-
-
-
-
-// ...
-
-// récupère un billet avec son id
-function getBillet($idBillet){
-    $bdd= getBdd();
-    $billet=$bdd->prepare('SELECT BIL_ID as id, BIL_DATE as date, BIL_TITRE as titre, BIL_CONTENU as contenu FROM T_BILLET WHERE BIL_ID =?;');
-    $billet->execute(array($idBillet));
-
-    if($billet->rowCount() == 1){
-        return $billet->fetch();
+/**
+ * Classe Abstraite pour la PDO
+ * 
+ * Pensez à changez les constantes:
+ *  
+ *  $MYHOST,
+ * 
+ *  $MYLOGIN,
+ *  
+ *  $MYPASS,
+ * 
+ *  $MYBDD
+ */
+abstract class Model {
+    private $bdd;
+    
+    private $MYHOST = "localhost";
+    private $MYLOGIN = "admin";
+    private $MYPASS = "l73zeld1!";
+    private $MYBDD = "ticket";
+    
+    public function __construct()
+    {
+         $this->URL= "mysql:host=".$this->MYHOST.";dbname=".$this->MYBDD.";charset=utf8";
     }
-    else{
-        throw new Exception("Aucun billet ne correspond à cet identifiant");
+
+    private function getBdd(): PDO
+    {
+        if ($this->bdd == null){
+            $this->bdd = new PDO($this->URL, $this->MYLOGIN, $this->MYPASS,array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+        }
+
+        return $this->bdd;
     }
-}
-// récupère les commentaires associés à un billet
 
-//Attention ! : si vous n'êtes pas sous PHP 8.0, ne pas écrire "function getComments($idBillet): bool|PDOStatement"
-//mais simplement "function getComments($idBillet)"
+    protected function executerRequete($sql, $params = null): bool|PDOStatement
+    {
+        if ($params == null) {
+            $resultat = $this->getBdd()->query($sql);    // exécution directe
+        }
+        else {
+            $resultat = $this->getBdd()->prepare($sql);  // requête préparée
+            $resultat->execute($params);
+        }
+        return $resultat;
+    }
 
-function getComments($idBillet): bool|PDOStatement
-{
-    $bdd = getBdd();
-    $comments = $bdd->prepare('SELECT COM_ID as id, COM_DATE as date, COM_AUTEUR as auteur, COM_CONTENU as contenu FROM T_COMMENTAIRE WHERE BIL_ID =?');
-    $comments->execute(array($idBillet));
-    return $comments;
+
+
+
+
+
+
+
 }
