@@ -1,0 +1,41 @@
+verifier que tout est ok pour le fonctionnement de Symphony:
+symfony check:requirements
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+creation nouveau projet:
+symfony NomDuProjet --webapp
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Demarrer server symfony (depuis le projet):
+symfony serve                       ///////(IMPORTANT affiche dans un encadré vert l'url qui sera utilisé exemple: http://127.0.0.1:8000 auquelle on rajoutera un template(vue) exemple:http://127.0.0.1:8000/test)  )
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+creation du controller:
+symfony console make:controller
+puis
+NomDuController
+
+ou directement:
+symfony console make:controller NomDuController
+
+exemple: 
+~/Bureau/vs_code/full_stack/Symfony/premier$ symfony console make:controller TestController
+
+         //////       (Cette commande vous permet de créer un contrôleur Test. En fait deux fichiers viennent d'être créés.) \\\\\\
+
+cela creer:  created: src/Controller/TestController.php      //////    (La classe Test contenant la méthode index)  \\\\\\
+             created: templates/test/index.html.twig        //////     (Et une vue )                                \\\\\\
+
+
+////////(Vous pouvez vérfier le bon fonctionnement de cet exemple en tapant http://127.0.0.1:8000/test dans votre navigateur.) \\\\\\\
+
+
+
+
+
+
+
+
